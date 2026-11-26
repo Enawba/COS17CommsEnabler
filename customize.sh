@@ -3,7 +3,7 @@ CONF=/data/adb/cos17comms.conf
 
 ui_print " "
 ui_print "  COS17 Comms Enabler  by enawba"
-ui_print "  Contacts + Phone + Messages + Calendar"
+ui_print "  ColorOS Contacts + Phone + Messages"
 ui_print " "
 
 STOCK=/my_stock/etc/config/app_v2.xml
@@ -22,7 +22,14 @@ if grep -qE 'pkg="com\.android\.(contacts|incallui|mms)"' "$STOCK"; then
 else
   ui_print "- stock app_v2.xml does not disable them (nothing to patch)"
 fi
-[ -f "$MODPATH/apk/OPlusCalendar.apk" ] && ui_print "- ColorOS Calendar 17.3.80 will be installed after reboot"
+if [ -f "$MODPATH/apk/OPlusCalendar.apk" ]; then
+  ui_print "- bundled ColorOS Calendar will be installed after reboot"
+elif pm list packages com.coloros.calendar 2>/dev/null | grep -q 'package:com.coloros.calendar$'; then
+  ui_print "- ColorOS Calendar is already installed"
+else
+  ui_print "- ColorOS Calendar is not part of this zip:"
+  ui_print "  install OPlusCalendar APK from the GitHub release page"
+fi
 
 # ---- option: disable Google Dialer + Google Messages ---------------------------
 # Returns 0 = Vol+, 1 = Vol-, 2 = no key within ~10 s
