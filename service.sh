@@ -6,41 +6,10 @@ FLAG=/data/adb/cos17comms.google_disabled
 APK=$MODDIR/apk/Calendar.apk
 CAL=com.oplus.calendar
 CAL_VER=17006030
-GOOGLE_APPS="com.google.android.dialer com.google.android.apps.messaging"
-SED=$MODDIR/holidays_en.sed
-CALENDARS="com.oplus.calendar com.coloros.calendar"
 HOLIDAY_CHECK=21600   # seconds between holiday checks after boot (6 h)
+. "$MODDIR/holidays.sh"
 
-# ColorOS Calendar downloads "Holidays in India" in Hindi. Translate the cached list
-# (shared_prefs/calendar_legal_holiday.xml) to English with holidays_en.sed.
-# $1 = 1: force-stop a running Calendar first (boot); otherwise skip a running one.
-translate_holidays() {
-  grep -q '^TRANSLATE_HOLIDAYS=0' "$CONF" 2>/dev/null && return 0
-  [ -f "$SED" ] || return 0
-  for pkg in $CALENDARS; do
-    pref=${APPDATA:-/data/data}/$pkg/shared_prefs/calendar_legal_holiday.xml
-    [ -f "$pref" ] || continue
-    # Devanagari is U+0900-U+097F = UTF-8 bytes E0 A4 xx / E0 A5 xx
-    grep -q -e "$(printf '\340\244')" -e "$(printf '\340\245')" "$pref" || continue
-    if pidof "$pkg" >/dev/null 2>&1; then
-      [ "$1" = 1 ] || continue
-      am force-stop "$pkg"
-    fi
-    tmp=$MODDIR/holidays.tmp
-    sed -E -f "$SED" "$pref" > "$tmp" || { rm -f "$tmp"; continue; }
-    if cmp -s "$pref" "$tmp"; then
-      rm -f "$tmp"
-      continue
-    fi
-    cp "$pref" "$MODDIR/holidays_hindi_$pkg.xml"   # last Hindi original, for reference
-    cat "$tmp" > "$pref" && rm -f "$pref.bak"      # cat keeps owner + SELinux label
-    rm -f "$tmp"
-    echo "$(date '+%F %T') $pkg: holiday list translated to English"
-    left=$(grep -oE '&quot;summary&quot;:&quot;[^&]*' "$pref" | cut -d';' -f4 |
-           grep -e "$(printf '\340\244')" -e "$(printf '\340\245')" | sort -u)
-    [ -n "$left" ] && echo "  no translation yet for: $(echo "$left" | tr '\n' ',')"
-  done
-}
+installed() { pm list packages "$1" 2>/dev/null | grep -q "^package:$1\$"; }
 
 until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 3; done
 sleep 15
@@ -48,10 +17,15 @@ sleep 15
 {
   echo "== $(date) service"
 
-  # 1) make sure the ColorOS comms apps are enabled for the owner user
+  # 1) make sure the ColorOS comms apps that this ROM has are enabled for the owner user
+  #    (OnePlus Open EU/global firmware has no ColorOS Messages - that is skipped)
   for p in com.android.contacts com.android.incallui com.android.mms; do
     pm install-existing --user 0 "$p" >/dev/null 2>&1
-    pm enable --user 0 "$p"
+    if installed "$p"; then
+      pm enable --user 0 "$p"
+    else
+      echo "$p is not on this ROM - skipped"
+    fi
   done
 
   # 2) ColorOS (global) Calendar, only in the all-in-one zip: install if missing or older
@@ -64,41 +38,47 @@ sleep 15
     echo "$CAL already at ${have}"
   fi
 
-  # 3) one-time: make ColorOS Phone / Messages the default apps
-  if [ ! -f "$MODDIR/.roles_done" ]; then
-    cmd role add-role-holder --user 0 android.app.role.DIALER com.android.contacts 0 && \
-    cmd role add-role-holder --user 0 android.app.role.SMS com.android.mms 0 && \
-    touch "$MODDIR/.roles_done"
+  # 3) once per app: make ColorOS Phone / Messages the default apps
+  #    (.roles_done = both done by v1.0-v1.4)
+  [ -f "$MODDIR/.roles_done" ] && touch "$MODDIR/.dialer_done" "$MODDIR/.sms_done"
+  if [ ! -f "$MODDIR/.dialer_done" ] && installed com.android.contacts; then
+    cmd role add-role-holder --user 0 android.app.role.DIALER com.android.contacts 0 &&
+      touch "$MODDIR/.dialer_done"
+  fi
+  if [ ! -f "$MODDIR/.sms_done" ] && installed com.android.mms; then
+    cmd role add-role-holder --user 0 android.app.role.SMS com.android.mms 0 &&
+      touch "$MODDIR/.sms_done"
   fi
   DIALER=$(cmd role get-role-holders --user 0 android.app.role.DIALER)
   SMS=$(cmd role get-role-holders --user 0 android.app.role.SMS)
   echo "default dialer: $DIALER / default sms: $SMS"
 
-  # 4) optional: disable Google Dialer + Google Messages
+  # 4) optional: disable Google Dialer / Google Messages
+  #    Safety: each Google app is only disabled while its ColorOS replacement is the
+  #    default app, so calls and SMS keep working (no ColorOS Messages = Google Messages stays).
   DISABLE_GOOGLE=0
   [ -f "$CONF" ] && grep -q '^DISABLE_GOOGLE=1' "$CONF" && DISABLE_GOOGLE=1
-  if [ "$DISABLE_GOOGLE" = 1 ]; then
-    # Safety: only when ColorOS apps really are the defaults, so calls/SMS keep working.
-    if [ "$DIALER" = "com.android.contacts" ] && [ "$SMS" = "com.android.mms" ]; then
-      for p in $GOOGLE_APPS; do
-        pm list packages "$p" | grep -q "^package:$p\$" || continue
-        pm disable-user --user 0 "$p"
-      done
+  for pair in "com.google.android.dialer:$DIALER:com.android.contacts" \
+              "com.google.android.apps.messaging:$SMS:com.android.mms"; do
+    gapp=${pair%%:*}; rest=${pair#*:}; holder=${rest%%:*}; ours=${rest#*:}
+    installed "$gapp" || continue
+    if [ "$DISABLE_GOOGLE" = 1 ] && [ "$holder" = "$ours" ]; then
+      pm disable-user --user 0 "$gapp"
       touch "$FLAG"
-    else
-      echo "NOT disabling Google apps: ColorOS Phone/Messages are not the default apps"
+    elif [ "$DISABLE_GOOGLE" = 1 ]; then
+      echo "NOT disabling $gapp: $ours is not the default app"
+      [ -f "$FLAG" ] && pm enable --user 0 "$gapp"
+    elif [ -f "$FLAG" ]; then
+      pm enable --user 0 "$gapp"     # option switched off -> give the Google app back
     fi
-  elif [ -f "$FLAG" ]; then
-    # option switched off -> give the Google apps back
-    for p in $GOOGLE_APPS; do pm enable --user 0 "$p"; done
-    rm -f "$FLAG"
-  fi
+  done
+  [ "$DISABLE_GOOGLE" = 1 ] || rm -f "$FLAG"
 
-  # 5) Calendar holidays: Hindi -> English (see translate_holidays)
-  translate_holidays 1
+  # 5) Calendar holidays: English list for the selected region (holidays.sh)
+  holidays_import boot
 } >> "$LOG" 2>&1
 
 # keep checking: a Calendar that downloads a new list later is fixed while it is closed
 while sleep "$HOLIDAY_CHECK"; do
-  translate_holidays 0 >> "$LOG" 2>&1
+  holidays_import timer >> "$LOG" 2>&1
 done &

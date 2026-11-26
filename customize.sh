@@ -3,7 +3,7 @@ CONF=/data/adb/cos17comms.conf
 
 ui_print " "
 ui_print "  COS17 Comms Enabler  by enawba"
-ui_print "  ColorOS Contacts + Phone + Messages"
+ui_print "  ColorOS Contacts + Phone + Messages + English holidays"
 ui_print " "
 
 STOCK=/my_stock/etc/config/app_v2.xml
@@ -12,15 +12,22 @@ STOCK=/my_stock/etc/config/app_v2.xml
 ui_print "- Device: $(getprop ro.product.model) / $(getprop ro.build.display.id)"
 for p in Contacts InCallUI Mms; do
   if [ -d /my_stock/priv-app/$p ]; then
-    ui_print "- found /my_stock/priv-app/$p"
+    ui_print "- found ColorOS $p"
+  elif [ "$p" = Mms ]; then
+    ui_print "- ColorOS Messages is not on this ROM (e.g. OnePlus Open EU):"
+    ui_print "  Google Messages stays the SMS app"
   else
-    ui_print "! /my_stock/priv-app/$p is missing on this ROM - it cannot be enabled"
+    ui_print "! ColorOS $p is missing on this ROM - it cannot be enabled"
   fi
 done
-if grep -qE 'pkg="com\.android\.(contacts|incallui|mms)"' "$STOCK"; then
-  ui_print "- stock app_v2.xml disables ColorOS comms apps -> will be patched at boot"
+if grep -qE 'pkg="com\.android\.(contacts|incallui|mms)"' "$STOCK" /my_region/etc/config/app_v2.xml 2>/dev/null; then
+  ui_print "- app_v2.xml disables ColorOS comms apps -> patched at boot"
 else
-  ui_print "- stock app_v2.xml does not disable them (nothing to patch)"
+  ui_print "- app_v2.xml does not disable them (nothing to patch)"
+fi
+FEAT=/my_region/etc/extension/com.oplus.app-features.xml
+if [ -f "$FEAT" ] && ! grep -q 'name="com.android.server.telecom.oplus_dialer_enable"' "$FEAT"; then
+  ui_print "- ROM lacks the ColorOS dialer flags -> added at boot"
 fi
 if [ -f "$MODPATH/apk/Calendar.apk" ]; then
   ui_print "- bundled ColorOS Calendar will be installed after reboot"
@@ -72,10 +79,12 @@ fi
 ui_print "  Change later: edit $CONF (DISABLE_GOOGLE=0/1) and reboot"
 ui_print " "
 if [ "$TRANSLATE" = 1 ]; then
-  ui_print "- Calendar holidays in Hindi will be translated to English"
-  ui_print "  (at boot and every 6 h; TRANSLATE_HOLIDAYS=0 in $CONF turns it off)"
+  ui_print "- Calendar holidays: English list for your region"
+  ui_print "  (at boot, every 6 h and with the module's Action button;"
+  ui_print "   TRANSLATE_HOLIDAYS=0 in $CONF turns the automatic part off)"
 else
-  ui_print "- Calendar holiday translation is OFF (TRANSLATE_HOLIDAYS=0)"
+  ui_print "- Automatic English holidays are OFF (TRANSLATE_HOLIDAYS=0)"
+  ui_print "  The module's Action button still does it on demand"
 fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
