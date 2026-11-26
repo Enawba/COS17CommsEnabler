@@ -6,7 +6,7 @@ stock ColorOS communication apps in place of the Google ones:
 - **ColorOS Contacts + Phone (new UI)**: `com.android.contacts` and `com.android.incallui`
 - **ColorOS Messages**: `com.android.mms`
 - *Optional:* disables **Google Dialer** and **Google Messages**
-- **ColorOS dynamic Calendar** (`com.coloros.calendar` 17.3.80, from the China build) is a
+- **ColorOS dynamic Calendar** (`com.oplus.calendar` 17.6.30, the global build) is a
   **separate APK** on the release page. It is not part of the module zip.
 
 Tested target: OnePlus 12 (CPH2573, India) on ColorOS 17 with KernelSU-Next.
@@ -46,14 +46,18 @@ similar), because they make no sense with non-Chinese SIM cards.
 
 ### ColorOS dynamic Calendar (optional, separate download)
 
-1. Download `OPlusCalendar_17.3.80.apk` from the same release.
+1. Download `Calendar_17.6.30.apk` from the same release.
 2. Open it on the phone and install it like any app. Allow installs from your browser or
    file manager if Android asks.
 
-The launcher then shows the dynamic date icon. The APK is the unmodified,
-OPPO-signed `com.coloros.calendar` from ColorOS 17 China (`my_stock/del-app/Calendar`),
-installed as a normal app, which is also how China builds install it. You don't need
-root for this part, and the module isn't needed for the Calendar to work.
+The launcher then shows the dynamic date icon. The APK is the unmodified, OPPO-signed
+global ColorOS Calendar (`com.oplus.calendar`), installed as a normal app. It is in
+English and has Indian public and religious holidays and Panchang. You don't need root
+for this part, and the module isn't needed for the Calendar to work.
+
+Releases up to v1.2 shipped the China Calendar (`com.coloros.calendar` 17.3.80) instead.
+It shows Chinese lunar dates and festivals. If you installed it, uninstall it before or
+after installing the global one, so you don't have two Calendar apps.
 
 ### Calendar holidays in Hindi? (optional, root)
 
@@ -68,9 +72,8 @@ python tools/calendar_holidays_en.py             # apply
 ```
 
 - **Requirements:** Python 3, adb, and root.
-- **Which Calendar:** the script targets the global Calendar (`com.oplus.calendar`) by
-  default. For the China APK from the release page, add
-  `--package com.coloros.calendar`.
+- **Which Calendar:** the script targets the global Calendar (`com.oplus.calendar`) from
+  the release page. For the older China Calendar, add `--package com.coloros.calendar`.
 - **When to run it again:** the Calendar downloads a new list now and then, and the
   new list is in Hindi. Run the script again when that happens.
 - **Backups:** kept on the PC (`tools/calendar_legal_holiday.<time>.xml`) and on the
@@ -105,9 +108,9 @@ other app.
 
 * **Module zip:** run `python build.py`. The output is `COS17CommsEnabler_<version>.zip`.
 * **All-in-one zip (optional):** the module also installs a bundled Calendar after boot.
-  1. Extract `my_stock/del-app/Calendar/Calendar.apk` from a ColorOS 17 **China**
-     firmware.
-  2. Save it as `apk/OPlusCalendar.apk`. It is git-ignored and never committed.
+  1. Get the global ColorOS Calendar APK (`com.oplus.calendar`), for example
+     `Calendar_17.6.30.apk` from the release page.
+  2. Save it as `apk/Calendar.apk`. It is git-ignored and never committed.
   3. Run `python build.py --with-calendar`.
 
 ## License

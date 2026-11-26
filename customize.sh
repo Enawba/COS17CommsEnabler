@@ -22,13 +22,13 @@ if grep -qE 'pkg="com\.android\.(contacts|incallui|mms)"' "$STOCK"; then
 else
   ui_print "- stock app_v2.xml does not disable them (nothing to patch)"
 fi
-if [ -f "$MODPATH/apk/OPlusCalendar.apk" ]; then
+if [ -f "$MODPATH/apk/Calendar.apk" ]; then
   ui_print "- bundled ColorOS Calendar will be installed after reboot"
-elif pm list packages com.coloros.calendar 2>/dev/null | grep -q 'package:com.coloros.calendar$'; then
+elif pm list packages 2>/dev/null | grep -qE '^package:com\.(oplus|coloros)\.calendar$'; then
   ui_print "- ColorOS Calendar is already installed"
 else
   ui_print "- ColorOS Calendar is not part of this zip:"
-  ui_print "  install OPlusCalendar APK from the GitHub release page"
+  ui_print "  install the Calendar APK from the GitHub release page"
 fi
 
 # ---- option: disable Google Dialer + Google Messages ---------------------------

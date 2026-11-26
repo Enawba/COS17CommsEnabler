@@ -1,9 +1,9 @@
 """Build the flashable module zip.
 
     python build.py                  # module only (the normal release zip)
-    python build.py --with-calendar  # also bundle apk/OPlusCalendar.apk (all-in-one zip)
+    python build.py --with-calendar  # also bundle apk/Calendar.apk (all-in-one zip)
 
-apk/OPlusCalendar.apk = ColorOS 17 CN: my_stock/del-app/Calendar/Calendar.apk
+apk/Calendar.apk = ColorOS global Calendar (com.oplus.calendar), e.g. Calendar_17.6.30.apk
 """
 import os
 import sys
@@ -14,7 +14,7 @@ INCLUDE = ["META-INF/com/google/android/update-binary",
            "META-INF/com/google/android/updater-script",
            "module.prop", "customize.sh", "post-fs-data.sh", "service.sh", "uninstall.sh",
            "LICENSE"]
-CALENDAR = "apk/OPlusCalendar.apk"
+CALENDAR = "apk/Calendar.apk"
 EXECUTABLE = (".sh", "update-binary")
 
 

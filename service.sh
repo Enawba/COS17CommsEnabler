@@ -3,9 +3,9 @@ MODDIR=${0%/*}
 LOG=$MODDIR/service.log
 CONF=/data/adb/cos17comms.conf
 FLAG=/data/adb/cos17comms.google_disabled
-APK=$MODDIR/apk/OPlusCalendar.apk
-CAL=com.coloros.calendar
-CAL_VER=17003080
+APK=$MODDIR/apk/Calendar.apk
+CAL=com.oplus.calendar
+CAL_VER=17006030
 GOOGLE_APPS="com.google.android.dialer com.google.android.apps.messaging"
 
 until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 3; done
@@ -20,13 +20,13 @@ sleep 15
     pm enable --user 0 "$p"
   done
 
-  # 2) ColorOS (COS_CN) Calendar: install if missing or older than ours
+  # 2) ColorOS (global) Calendar, only in the all-in-one zip: install if missing or older
   have=$(dumpsys package "$CAL" 2>/dev/null | grep -m1 'versionCode=' | sed 's/.*versionCode=\([0-9]*\).*/\1/')
   if [ -f "$APK" ] && { [ -z "$have" ] || [ "$have" -lt "$CAL_VER" ]; }; then
     echo "installing $CAL (installed: ${have:-none})"
     SIZE=$(stat -c %s "$APK")
     cat "$APK" | pm install -r -g -S "$SIZE"
-  else
+  elif [ -f "$APK" ]; then
     echo "$CAL already at ${have}"
   fi
 
