@@ -1,5 +1,27 @@
 # Changelog
 
+## v1.7 (2026-11-27)
+
+**Fixes, all tested on a OnePlus 12 (CPH2573, ColorOS 17, KernelSU-Next)**
+- **Boot steps never ran:** enabling the apps, setting the default dialer/SMS app and
+  disabling the Google apps all failed with `cmd: Failure calling service …: Failed
+  transaction`. The boot script sent their output straight into its log file under
+  `/data/adb`, which Android's system services may not write to. The output now goes
+  through a pipe, and all of these steps work. This affected every earlier version.
+- **Action button hung:** it showed only its title and never finished. Reading OPPO's
+  version number ran a regex over the ~100 KB holiday line, which takes minutes with
+  busybox. Only a short prefix is matched now; the Action button finishes in under a
+  second, and the boot step and 6-hour check are fast too.
+
+**Verbose Action log**
+- The Action button now shows every step:
+  - module version, device, ROM and settings
+  - the holiday file and the region selected in the Calendar
+  - the English list used and OPPO's version number (kept)
+  - whether the Calendar was running and was closed
+  - the backup location, the write and its verification, and the time taken
+- Each run is also appended to `service.log`.
+
 ## v1.6 + Messages add-on v1.0 (2026-11-27)
 
 **New: COS17 Messages add-on (`COS17MessagesAddon_v1.0.zip`)**

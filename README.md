@@ -123,7 +123,8 @@ replaces it with **Google's English list for the same region**.
   - **Every 6 hours:** only while the Calendar is closed, so it never closes the app
     while you're using it.
   - **Action button:** press it in the KernelSU / Magisk manager to apply the list right
-    away. It runs even when the automatic part is turned off.
+    away. It runs even when the automatic part is turned off, and shows a step-by-step
+    log (region, list used, whether the Calendar was closed, backup, verification).
 - **What it changes:** only the region's holiday list, not your events or the religious
   holidays. OPPO's version number is kept, so the Calendar still downloads real updates;
   the next run replaces them with the English list again. The last original list is kept

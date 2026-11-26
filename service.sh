@@ -15,7 +15,7 @@ until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 3; done
 sleep 15
 
 {
-  echo "== $(date) service"
+  echo "== $(date) service $(grep '^version=' "$MODDIR/module.prop" | cut -d= -f2)"
 
   # 1) make sure the ColorOS comms apps that this ROM has are enabled for the owner user
   #    (OnePlus Open EU/global firmware has no ColorOS Messages - that is skipped)
@@ -89,9 +89,11 @@ sleep 15
 
   # 5) Calendar holidays: English list for the selected region (holidays.sh)
   holidays_import boot
-} >> "$LOG" 2>&1
+} 2>&1 | cat >> "$LOG"
+# (through a pipe: system services can't write into a file under /data/adb, so
+#  `cmd` / `pm` / `am` fail with "Failed transaction" when stdout is the log file)
 
 # keep checking: a Calendar that downloads a new list later is fixed while it is closed
 while sleep "$HOLIDAY_CHECK"; do
-  holidays_import timer >> "$LOG" 2>&1
+  holidays_import timer 2>&1 | cat >> "$LOG"
 done &
