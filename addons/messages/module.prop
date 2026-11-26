@@ -1,0 +1,6 @@
+id=COS17MessagesAddon
+name=COS17 Messages add-on (ColorOS Messages for ROMs without it)
+version=v1.0
+versionCode=1
+author=enawba
+description=Adds ColorOS Messages (com.android.mms 17.62.60 from ColorOS 17 India) as a system app on ColorOS 17 firmware that lacks it, e.g. OnePlus Open EU/global. Needs COS17 Comms Enabler v1.6+.

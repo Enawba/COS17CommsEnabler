@@ -22,7 +22,7 @@ adapts, so there are no region-specific branches to choose from.
 | Firmware | Contacts + Phone | Messages | Calendar holidays |
 |---|---|---|---|
 | ColorOS 17 India (e.g. OnePlus 12 CPH2573) | ✅ enabled | ✅ enabled | ✅ English list for your region |
-| ColorOS 17 EU/global (e.g. OnePlus Open) | ✅ enabled; the module also adds the 2 ColorOS-dialer feature flags this firmware lacks | ❌ not in the firmware: Google Messages stays the SMS app | ✅ English list for your region |
+| ColorOS 17 EU/global (e.g. OnePlus Open) | ✅ enabled; the module also adds the 2 ColorOS-dialer feature flags this firmware lacks | ➕ not in the firmware: flash the [Messages add-on](#messages-add-on-for-roms-without-coloros-messages), or Google Messages stays | ✅ English list for your region |
 
 The OnePlus Open EU firmware ships the same ColorOS Contacts (17.20.80) and InCallUI
 (17.6.10) as the India build, disabled by the same `app_v2.xml` lines. It does **not** ship
@@ -80,6 +80,31 @@ this part, and the module isn't needed for the Calendar to work.
 Releases up to v1.2 shipped the China Calendar (`com.coloros.calendar` 17.3.80) instead.
 It shows Chinese lunar dates and festivals. If you installed it, uninstall it before or
 after installing the global one, so you don't have two Calendar apps.
+
+### Messages add-on (for ROMs without ColorOS Messages)
+
+Some ColorOS 17 firmware, such as the OnePlus Open EU/global build, doesn't ship ColorOS
+Messages. `COS17MessagesAddon_<version>.zip` on the release page (98 MB) adds it as a
+system app:
+
+- **What's inside:** the unmodified, OPPO-signed ColorOS Messages
+  (`com.android.mms` 17.62.60) from the ColorOS 17 India firmware.
+- **Where it goes:** `/system/priv-app/COS17Mms`, through the module's systemless overlay,
+  with its native libraries unpacked next to it as on OPPO's own firmware.
+- **Permissions:** a `privapp-permissions` file grants Messages the same 21 privileged
+  permissions it has on the India firmware. The OnePlus Open firmware's own permission
+  lists already name it, with identical entries.
+
+1. Install **COS17 Comms Enabler v1.6 or newer** (needed: it lifts the firmware's block on
+   ColorOS Messages and makes it the default SMS app).
+2. Flash the add-on in the same manager and reboot.
+
+The add-on refuses to install on firmware that already has ColorOS Messages (for example
+the India build), because COS17 Comms Enabler enables the built-in one there. If you remove
+the add-on, the next boot gives the SMS role back to Google Messages.
+
+> **Status:** built from the firmware files and checked against them, but **not yet tested
+> on a real OnePlus Open**. Keep a backup and report your logs.
 
 ### English public holidays for your region
 
@@ -160,6 +185,11 @@ list.
      `Calendar_17.6.30.apk` from the release page.
   2. Save it as `apk/Calendar.apk`. It is git-ignored and never committed.
   3. Run `python build.py --with-calendar`.
+* **Messages add-on:**
+  1. Extract `my_stock/priv-app/Mms/Mms.apk` from a ColorOS 17 **India** firmware.
+  2. Save it as `apk/Mms.apk`. It is git-ignored and never committed.
+  3. Run `python build.py --messages-addon`. The output is
+     `COS17MessagesAddon_<version>.zip`.
 
 ## Changelog
 
@@ -168,8 +198,8 @@ See [CHANGELOG.md](CHANGELOG.md).
 ## License
 
 The module's scripts and build tooling are released under the [MIT License](LICENSE).
-The license does **not** cover the ColorOS Calendar APK on the release page, which
-remains OPPO's property. The holiday lists in `holidays/` come from Google's public
+The license does **not** cover the ColorOS Calendar APK on the release page or the
+ColorOS Messages APK inside the Messages add-on, which remain OPPO's property. The holiday lists in `holidays/` come from Google's public
 holiday calendars.
 
 ## Disclaimer

@@ -1,5 +1,25 @@
 # Changelog
 
+## v1.6 + Messages add-on v1.0 (2026-11-27)
+
+**New: COS17 Messages add-on (`COS17MessagesAddon_v1.0.zip`)**
+- Adds ColorOS Messages (`com.android.mms` 17.62.60, from ColorOS 17 India, unmodified)
+  as a system app on firmware that doesn't ship it, such as the OnePlus Open EU/global
+  build.
+- It goes in `/system/priv-app/COS17Mms` with its native libraries unpacked, plus a
+  `privapp-permissions` file with the same 21 privileged permissions as on the India
+  firmware.
+- It refuses to install where ColorOS Messages already exists.
+- It needs COS17 Comms Enabler v1.6+.
+- Not yet tested on a real OnePlus Open.
+
+**COS17 Comms Enabler v1.6**
+- Safety net: if a default dialer or SMS app disappears (for example after removing the
+  add-on), the next boot gives the role back to the Google app and re-enables it if
+  needed.
+- The installer recognises the Messages add-on and points to it on firmware without
+  ColorOS Messages.
+
 ## v1.5 (2026-11-27)
 
 **English public holidays for your region**

@@ -49,6 +49,19 @@ sleep 15
     cmd role add-role-holder --user 0 android.app.role.SMS com.android.mms 0 &&
       touch "$MODDIR/.sms_done"
   fi
+  # safety net: a default app that vanished (e.g. the Messages add-on was removed)
+  # -> give the role back to the Google app, so calls / SMS keep working
+  for pair in "DIALER:com.google.android.dialer:.dialer_done" \
+              "SMS:com.google.android.apps.messaging:.sms_done"; do
+    role=android.app.role.${pair%%:*}; rest=${pair#*:}; gapp=${rest%%:*}; done_flag=${rest#*:}
+    [ -n "$(cmd role get-role-holders --user 0 "$role")" ] && continue
+    installed "$gapp" || continue
+    pm enable --user 0 "$gapp"
+    cmd role add-role-holder --user 0 "$role" "$gapp" 0
+    rm -f "$MODDIR/$done_flag"     # ColorOS app comes back later -> make it default again
+    echo "no default app for $role -> $gapp"
+  done
+
   DIALER=$(cmd role get-role-holders --user 0 android.app.role.DIALER)
   SMS=$(cmd role get-role-holders --user 0 android.app.role.SMS)
   echo "default dialer: $DIALER / default sms: $SMS"

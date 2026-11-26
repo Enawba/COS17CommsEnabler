@@ -13,9 +13,13 @@ ui_print "- Device: $(getprop ro.product.model) / $(getprop ro.build.display.id)
 for p in Contacts InCallUI Mms; do
   if [ -d /my_stock/priv-app/$p ]; then
     ui_print "- found ColorOS $p"
+  elif [ "$p" = Mms ] && { [ -d /data/adb/modules/COS17MessagesAddon ] ||
+                            [ -d /data/adb/modules_update/COS17MessagesAddon ]; }; then
+    ui_print "- ColorOS Messages comes from the Messages add-on"
   elif [ "$p" = Mms ]; then
     ui_print "- ColorOS Messages is not on this ROM (e.g. OnePlus Open EU):"
-    ui_print "  Google Messages stays the SMS app"
+    ui_print "  Google Messages stays the SMS app, or flash the"
+    ui_print "  COS17 Messages add-on from the release page"
   else
     ui_print "! ColorOS $p is missing on this ROM - it cannot be enabled"
   fi
