@@ -1,5 +1,14 @@
 # Changelog
 
+## v1.8 + Messages add-on v1.1 (2026-11-27)
+
+**Updates from the KernelSU / KernelSU-Next / Magisk manager**
+- Both modules now have `updateJson=` in `module.prop`. The manager checks
+  `update.json` / `update-messages-addon.json` in this repo and offers new versions
+  itself, with this changelog.
+- Flash v1.8 (and add-on v1.1) once by hand. Later updates come through the manager.
+- No other changes. The Messages add-on is unchanged apart from the update check.
+
 ## v1.7 (2026-11-27)
 
 **Fixes, all tested on a OnePlus 12 (CPH2573, ColorOS 17, KernelSU-Next)**

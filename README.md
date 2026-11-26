@@ -161,6 +161,17 @@ while ColorOS Messages is the default SMS app. You can never end up without a wo
 dialer or SMS app, and on firmware without ColorOS Messages, Google Messages always stays.
 The apps are disabled, not uninstalled. Disabling Google Messages also turns off its RCS chat.
 
+## Updates
+
+From v1.8 (and Messages add-on v1.1), the KernelSU / KernelSU-Next / Magisk manager checks
+for updates itself and shows an **Update** button with this changelog. It reads
+[`update.json`](update.json) and [`update-messages-addon.json`](update-messages-addon.json)
+from this repo. Older versions have to be updated once by flashing the new zip.
+
+For maintainers: `build.py` writes both JSON files at each build, pointing to the zips of
+the release tagged with the module version (or `--tag`). Commit them only after that
+release is published, so the manager never offers a zip that isn't online yet.
+
 ## Logs
 
 Logs are written to `/data/adb/modules/COS17CommsEnabler/`:

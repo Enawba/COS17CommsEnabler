@@ -3,6 +3,11 @@
     python build.py                  # module only (the normal release zip)
     python build.py --with-calendar  # also bundle apk/Calendar.apk (all-in-one zip)
     python build.py --messages-addon # COS17 Messages add-on from apk/Mms.apk
+    ... [--tag v1.8]                 # release tag for update*.json (default: module version)
+
+Each build also writes update.json / update-messages-addon.json (KernelSU / Magisk
+update check, see updateJson= in module.prop). Commit them only AFTER the release with
+the zips is published.
 
 apk/Mms.apk = ColorOS 17 India: my_stock/priv-app/Mms/Mms.apk (com.android.mms)
 
@@ -38,14 +43,34 @@ def add(z, name, data, mode=0o644, stored=False):
     z.writestr(info, data)
 
 
-def messages_addon():
+REPO = "Enawba/COS17CommsEnabler"
+RAW = f"https://raw.githubusercontent.com/{REPO}/main/"
+
+
+def read_props(path):
+    return dict(l.split("=", 1) for l in open(path, encoding="utf-8").read().splitlines()
+                if "=" in l)
+
+
+def write_update_json(props, zip_name, json_name, tag):
+    """updateJson for KernelSU / Magisk: the manager offers the zip of release <tag>.
+    Commit it only after that release is published, or the download link is dead."""
+    data = {"version": props["version"], "versionCode": int(props["versionCode"]),
+            "zipUrl": f"https://github.com/{REPO}/releases/download/{tag}/{zip_name}",
+            "changelog": RAW + "CHANGELOG.md"}
+    with open(os.path.join(ROOT, json_name), "w", encoding="utf-8", newline="\n") as f:
+        json.dump(data, f, indent=2)
+        f.write("\n")
+    print(f"wrote {json_name} -> {data['zipUrl']}")
+
+
+def messages_addon(tag):
     """ColorOS Messages as a system app for ROMs without it (e.g. OnePlus Open EU)."""
     src = os.path.join(ROOT, "addons", "messages")
     apk = os.path.join(ROOT, "apk", "Mms.apk")
     if not os.path.exists(apk):
         sys.exit("apk/Mms.apk is missing - see README 'Building from source'")
-    props = dict(l.split("=", 1) for l in open(os.path.join(src, "module.prop"),
-                                                encoding="utf-8").read().splitlines() if "=" in l)
+    props = read_props(os.path.join(src, "module.prop"))
     app = "system/priv-app/COS17Mms"
     out = os.path.join(ROOT, f"{props['id']}_{props['version']}.zip")
     apk_zip = zipfile.ZipFile(apk)
@@ -67,14 +92,18 @@ def messages_addon():
         for i in libs:
             add(z, f"{app}/lib/arm64/{os.path.basename(i.filename)}", apk_zip.read(i))
     print(f"built {out} ({os.path.getsize(out) / 1e6:.1f} MB, {len(libs)} libraries)")
+    write_update_json(props, os.path.basename(out), "update-messages-addon.json", tag)
 
 
 def main():
-    if "--messages-addon" in sys.argv[1:]:
-        return messages_addon()
-    with_calendar = "--with-calendar" in sys.argv[1:]
-    props = dict(l.split("=", 1) for l in open(os.path.join(ROOT, "module.prop"),
-                                                encoding="utf-8").read().splitlines() if "=" in l)
+    args = sys.argv[1:]
+    # release tag the zips will be attached to (default: the module's version)
+    tag = (args[args.index("--tag") + 1] if "--tag" in args[:-1]
+           else read_props(os.path.join(ROOT, "module.prop"))["version"])
+    if "--messages-addon" in args:
+        return messages_addon(tag)
+    with_calendar = "--with-calendar" in args
+    props = read_props(os.path.join(ROOT, "module.prop"))
     files = list(INCLUDE)
     suffix = ""
     if with_calendar:
@@ -97,6 +126,8 @@ def main():
             cc = os.path.splitext(os.path.basename(path))[0]
             add(z, f"holidays/{cc}", holidays.data_array(entries).encode("utf-8"))
     print(f"built {out} ({os.path.getsize(out) / 1e6:.2f} MB, {len(regions)} holiday regions)")
+    if not with_calendar:
+        write_update_json(props, os.path.basename(out), "update.json", tag)
 
 
 if __name__ == "__main__":

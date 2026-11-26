@@ -1,6 +1,7 @@
 id=COS17CommsEnabler
 name=COS17 Comms Enabler (Contacts, Phone, Messages)
-version=v1.7
-versionCode=8
+version=v1.8
+versionCode=9
 author=enawba
+updateJson=https://raw.githubusercontent.com/Enawba/COS17CommsEnabler/main/update.json
 description=ColorOS 17 (IN/global): enables stock ColorOS Contacts + Phone (InCallUI) + Messages, optionally disables Google Dialer + Messages, puts English public holidays for your region into the ColorOS Calendar (Action button: do it now). ColorOS (global) Calendar is a separate APK on the release page.
