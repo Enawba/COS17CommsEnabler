@@ -5,8 +5,9 @@
     python calendar_holidays_en.py --package com.coloros.calendar   # China Calendar APK
 
 OPPO's server sends the "Holidays in India" list in Hindi even when the phone is set
-to English. Needs adb + root (KernelSU / Magisk). Re-run whenever the Calendar
-downloads a new holiday list (it comes back in Hindi). A backup of the original file
+to English. Needs adb + root (KernelSU / Magisk). Since v1.4 the module itself does
+this at boot and every 6 h (build.py turns NAMES / LINES below into holidays_en.sed);
+this script is for translating right away, without a reboot. A backup of the original file
 is kept on the PC (calendar_legal_holiday.<time>.xml, next to this script) and on the
 phone (*.xml.hindi).
 """

@@ -48,6 +48,8 @@ vol_key() {
 
 OLD=0
 [ -f "$CONF" ] && grep -q '^DISABLE_GOOGLE=1' "$CONF" && OLD=1
+TRANSLATE=1
+[ -f "$CONF" ] && grep -q '^TRANSLATE_HOLIDAYS=0' "$CONF" && TRANSLATE=0
 ui_print " "
 ui_print "- Disable Google Dialer + Google Messages?"
 ui_print "    Vol+ = YES, disable them"
@@ -59,7 +61,7 @@ case $? in
   1) CHOICE=0 ;;
   *) CHOICE=$OLD ;;
 esac
-echo "DISABLE_GOOGLE=$CHOICE" > "$CONF"
+{ echo "DISABLE_GOOGLE=$CHOICE"; echo "TRANSLATE_HOLIDAYS=$TRANSLATE"; } > "$CONF"
 chmod 0600 "$CONF"
 if [ "$CHOICE" = 1 ]; then
   ui_print "- Google Dialer + Messages WILL be disabled after reboot"
@@ -68,6 +70,13 @@ else
   ui_print "- Google Dialer + Messages will be kept"
 fi
 ui_print "  Change later: edit $CONF (DISABLE_GOOGLE=0/1) and reboot"
+ui_print " "
+if [ "$TRANSLATE" = 1 ]; then
+  ui_print "- Calendar holidays in Hindi will be translated to English"
+  ui_print "  (at boot and every 6 h; TRANSLATE_HOLIDAYS=0 in $CONF turns it off)"
+else
+  ui_print "- Calendar holiday translation is OFF (TRANSLATE_HOLIDAYS=0)"
+fi
 
 set_perm_recursive "$MODPATH" 0 0 0755 0644
 set_perm "$MODPATH/post-fs-data.sh" 0 0 0755

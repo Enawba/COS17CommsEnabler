@@ -29,6 +29,7 @@ by three lines in `/my_stock/etc/config/app_v2.xml`:
 | Boot completed | `service.sh` | Re-enables the three apps if an earlier boot disabled them. |
 | First boot only | `service.sh` | Makes ColorOS Phone the default dialer and ColorOS Messages the default SMS app. You can change defaults freely afterwards. |
 | Optional | `service.sh` | Disables Google Dialer + Google Messages (see below). |
+| Boot + every 6 h | `service.sh` | Translates the Calendar's Hindi holiday list to English (see below). |
 | Module removed | `uninstall.sh` | Re-enables the Google apps and makes them the default dialer / SMS app again. |
 
 No China-only features are enabled (China Mobile video calling, Chinese number tagging and
@@ -59,33 +60,47 @@ Releases up to v1.2 shipped the China Calendar (`com.coloros.calendar` 17.3.80) 
 It shows Chinese lunar dates and festivals. If you installed it, uninstall it before or
 after installing the global one, so you don't have two Calendar apps.
 
-### Calendar holidays in Hindi? (optional, root)
+### Calendar holidays in Hindi: translated automatically
 
 OPPO's holiday service sends the **Holidays in India** list in Hindi, even when the phone
-is set to English, and the Calendar has no setting to change that.
-[`tools/calendar_holidays_en.py`](tools/calendar_holidays_en.py) translates the
-downloaded list to English (Google's English holiday names) over adb.
+is set to English, and the Calendar has no setting to change that. The module translates
+the downloaded list to English, using Google's English holiday names:
+
+- **When:** at every boot, and every 6 hours after that.
+- **At boot:** if the Calendar is already running, the module closes it first.
+- **During the day:** the 6-hour check only translates while the Calendar is closed, so
+  it never closes the app while you're using it.
+- **What it changes:** only the holiday list, not your events. The last Hindi original is
+  kept in the module folder (`holidays_hindi_<package>.xml`).
+- **Which Calendar:** it works for the global Calendar (`com.oplus.calendar`) and the
+  older China one (`com.coloros.calendar`).
+- **New holiday names:** a name the module can't translate yet stays in Hindi and is listed
+  in `service.log`.
+- **Turning it off:** set `TRANSLATE_HOLIDAYS=0` in `/data/adb/cos17comms.conf`.
+
+To translate straight away, without waiting for a reboot, run
+[`tools/calendar_holidays_en.py`](tools/calendar_holidays_en.py) on a PC. It needs
+Python 3, adb and root:
 
 ```
 python tools/calendar_holidays_en.py --dry-run   # preview
 python tools/calendar_holidays_en.py             # apply
 ```
 
-- **Requirements:** Python 3, adb, and root.
-- **Which Calendar:** the script targets the global Calendar (`com.oplus.calendar`) from
-  the release page. For the older China Calendar, add `--package com.coloros.calendar`.
-- **When to run it again:** the Calendar downloads a new list now and then, and the
-  new list is in Hindi. Run the script again when that happens.
-- **Backups:** kept on the PC (`tools/calendar_legal_holiday.<time>.xml`) and on the
-  phone (`calendar_legal_holiday.xml.hindi`).
+Add `--package com.coloros.calendar` for the older China Calendar.
+
+The script holds the translation table. `build.py` generates the module's
+`holidays_en.sed` from it, so the module and the script always translate the same way.
 
 If you'd rather not use root, turn off **Public holidays** in Calendar settings and
 subscribe to Google's English **Holidays in India** calendar in your Google account.
 
-### Changing the Google option later
+### Changing the options later
 
-Edit `/data/adb/cos17comms.conf`, set `DISABLE_GOOGLE=1` (disable) or `DISABLE_GOOGLE=0`
-(keep or re-enable), then reboot.
+Edit `/data/adb/cos17comms.conf`, then reboot:
+
+- `DISABLE_GOOGLE=1` disables the Google apps; `DISABLE_GOOGLE=0` keeps them or turns them back on.
+- `TRANSLATE_HOLIDAYS=1` turns the holiday translation on (the default); `TRANSLATE_HOLIDAYS=0` turns it off.
 
 For safety, the Google apps are only disabled while ColorOS Phone and ColorOS Messages
 **are** the default dialer and SMS apps, so you can never end up without a working dialer.
@@ -96,13 +111,14 @@ They are disabled, not uninstalled. Disabling Google Messages also turns off its
 Logs are written to `/data/adb/modules/COS17CommsEnabler/`:
 
 - `post-fs-data.log`: the `app_v2.xml` patch and bind mount
-- `service.log`: enabling apps, default apps and the Google option
+- `service.log`: enabling apps, default apps, the Google option and holiday translation
 
 ## Uninstall
 
 Remove the module in the manager and reboot. The Google Dialer and Messages are restored
 as the default apps. If you installed ColorOS Calendar, uninstall it from Settings like any
-other app.
+other app. If you keep it, its holidays stay in English until the Calendar downloads a new
+(Hindi) list.
 
 ## Building from source
 

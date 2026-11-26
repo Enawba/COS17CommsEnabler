@@ -7,6 +7,40 @@ APK=$MODDIR/apk/Calendar.apk
 CAL=com.oplus.calendar
 CAL_VER=17006030
 GOOGLE_APPS="com.google.android.dialer com.google.android.apps.messaging"
+SED=$MODDIR/holidays_en.sed
+CALENDARS="com.oplus.calendar com.coloros.calendar"
+HOLIDAY_CHECK=21600   # seconds between holiday checks after boot (6 h)
+
+# ColorOS Calendar downloads "Holidays in India" in Hindi. Translate the cached list
+# (shared_prefs/calendar_legal_holiday.xml) to English with holidays_en.sed.
+# $1 = 1: force-stop a running Calendar first (boot); otherwise skip a running one.
+translate_holidays() {
+  grep -q '^TRANSLATE_HOLIDAYS=0' "$CONF" 2>/dev/null && return 0
+  [ -f "$SED" ] || return 0
+  for pkg in $CALENDARS; do
+    pref=${APPDATA:-/data/data}/$pkg/shared_prefs/calendar_legal_holiday.xml
+    [ -f "$pref" ] || continue
+    # Devanagari is U+0900-U+097F = UTF-8 bytes E0 A4 xx / E0 A5 xx
+    grep -q -e "$(printf '\340\244')" -e "$(printf '\340\245')" "$pref" || continue
+    if pidof "$pkg" >/dev/null 2>&1; then
+      [ "$1" = 1 ] || continue
+      am force-stop "$pkg"
+    fi
+    tmp=$MODDIR/holidays.tmp
+    sed -E -f "$SED" "$pref" > "$tmp" || { rm -f "$tmp"; continue; }
+    if cmp -s "$pref" "$tmp"; then
+      rm -f "$tmp"
+      continue
+    fi
+    cp "$pref" "$MODDIR/holidays_hindi_$pkg.xml"   # last Hindi original, for reference
+    cat "$tmp" > "$pref" && rm -f "$pref.bak"      # cat keeps owner + SELinux label
+    rm -f "$tmp"
+    echo "$(date '+%F %T') $pkg: holiday list translated to English"
+    left=$(grep -oE '&quot;summary&quot;:&quot;[^&]*' "$pref" | cut -d';' -f4 |
+           grep -e "$(printf '\340\244')" -e "$(printf '\340\245')" | sort -u)
+    [ -n "$left" ] && echo "  no translation yet for: $(echo "$left" | tr '\n' ',')"
+  done
+}
 
 until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 3; done
 sleep 15
@@ -59,4 +93,12 @@ sleep 15
     for p in $GOOGLE_APPS; do pm enable --user 0 "$p"; done
     rm -f "$FLAG"
   fi
+
+  # 5) Calendar holidays: Hindi -> English (see translate_holidays)
+  translate_holidays 1
 } >> "$LOG" 2>&1
+
+# keep checking: a Calendar that downloads a new list later is fixed while it is closed
+while sleep "$HOLIDAY_CHECK"; do
+  translate_holidays 0 >> "$LOG" 2>&1
+done &
