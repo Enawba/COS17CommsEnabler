@@ -161,6 +161,10 @@ list.
   2. Save it as `apk/Calendar.apk`. It is git-ignored and never committed.
   3. Run `python build.py --with-calendar`.
 
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
 ## License
 
 The module's scripts and build tooling are released under the [MIT License](LICENSE).
