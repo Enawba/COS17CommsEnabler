@@ -1,0 +1,5 @@
+apk/*.apk
+*.zip
+*.log
+.roles_done
+__pycache__/
