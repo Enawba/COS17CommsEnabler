@@ -55,6 +55,30 @@ OPPO-signed `com.coloros.calendar` from ColorOS 17 China (`my_stock/del-app/Cale
 installed as a normal app, which is also how China builds install it. You don't need
 root for this part, and the module isn't needed for the Calendar to work.
 
+### Calendar holidays in Hindi? (optional, root)
+
+OPPO's holiday service sends the **Holidays in India** list in Hindi, even when the phone
+is set to English, and the Calendar has no setting to change that.
+[`tools/calendar_holidays_en.py`](tools/calendar_holidays_en.py) translates the
+downloaded list to English (Google's English holiday names) over adb.
+
+```
+python tools/calendar_holidays_en.py --dry-run   # preview
+python tools/calendar_holidays_en.py             # apply
+```
+
+- **Requirements:** Python 3, adb, and root.
+- **Which Calendar:** the script targets the global Calendar (`com.oplus.calendar`) by
+  default. For the China APK from the release page, add
+  `--package com.coloros.calendar`.
+- **When to run it again:** the Calendar downloads a new list now and then, and the
+  new list is in Hindi. Run the script again when that happens.
+- **Backups:** kept on the PC (`tools/calendar_legal_holiday.<time>.xml`) and on the
+  phone (`calendar_legal_holiday.xml.hindi`).
+
+If you'd rather not use root, turn off **Public holidays** in Calendar settings and
+subscribe to Google's English **Holidays in India** calendar in your Google account.
+
 ### Changing the Google option later
 
 Edit `/data/adb/cos17comms.conf`, set `DISABLE_GOOGLE=1` (disable) or `DISABLE_GOOGLE=0`

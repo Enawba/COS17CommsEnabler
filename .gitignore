@@ -3,3 +3,4 @@ apk/*.apk
 *.log
 .roles_done
 __pycache__/
+tools/calendar_legal_holiday.*.xml
