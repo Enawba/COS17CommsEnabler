@@ -73,6 +73,12 @@ The repository does not contain the Calendar APK. To build the zip yourself:
 2. Save it as `apk/OPlusCalendar.apk`.
 3. Run `python build.py`. The output is `COS17CommsEnabler_<version>.zip`.
 
+## License
+
+The module's scripts and build tooling are released under the [MIT License](LICENSE).
+The license does **not** cover the ColorOS Calendar APK bundled in the release zip, which
+remains OPPO's property.
+
 ## Disclaimer
 
 ColorOS, the ColorOS Calendar app and all related trademarks belong to OPPO / OnePlus.
